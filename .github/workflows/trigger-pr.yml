@@ -1,15 +1,9 @@
 name: Cypress UI Tests
 
 on:
-<<<<<<< Updated upstream
-    pull_request:
-        types: [opened, synchronize, reopened]  # These events ensure it runs on PR creation or updates
-    workflow_dispatch:  # This allows manual triggering
-=======
   pull_request:
     types: [opened, synchronize, reopened]  # Automatically runs on PR creation or updates
   workflow_dispatch:  # Allows manual triggering via a button
->>>>>>> Stashed changes
 
 jobs:
   create-check:
