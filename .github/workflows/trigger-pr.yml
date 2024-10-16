@@ -2,8 +2,8 @@ name: Cypress UI Tests
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]  # Automatically runs on PR creation or updates
-  workflow_dispatch:  # Allows manual triggering via a button
+    types: [opened, synchronize, reopened]  # Trigger on PR events
+  workflow_dispatch:  # Allow manual trigger
 
 jobs:
   create-check:
@@ -17,14 +17,15 @@ jobs:
             -d '{
               "state": "pending",
               "target_url": "https://github.com/${{ github.repository }}/actions/workflows/cypress-ui-check.yml/dispatch",
-              "description": "Click the button to run UI tests.",
+              "description": "Click the button to manually trigger UI tests.",
               "context": "Run Cypress UI Tests"
             }' \
             https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}
 
   cypress-tests:
-    needs: create-check
     runs-on: ubuntu-latest
+    needs: create-check
+    if: github.event_name == 'workflow_dispatch'  # Only run after manual trigger
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
