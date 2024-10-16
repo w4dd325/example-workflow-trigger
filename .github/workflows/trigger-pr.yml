@@ -1,13 +1,13 @@
-# .github/workflows/cypress-ui-check.yml
 name: Cypress UI Tests
 
 on:
-  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]  # Automatically runs on PR creation or updates
+  workflow_dispatch:  # Allows manual triggering via a button
 
 jobs:
   create-check:
     runs-on: ubuntu-latest
-
     steps:
       - name: Create a "Run UI Tests" status check
         run: |
@@ -16,7 +16,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "state": "pending",
-              "target_url": "https://github.com/${{ github.repository }}/actions/workflows/cypress-ui-tests.yml/dispatch",
+              "target_url": "https://github.com/${{ github.repository }}/actions/workflows/cypress-ui-check.yml/dispatch",
               "description": "Click the button to run UI tests.",
               "context": "Run Cypress UI Tests"
             }' \
@@ -25,35 +25,36 @@ jobs:
   cypress-tests:
     needs: create-check
     runs-on: ubuntu-latest
-
-    if: github.event_name == 'workflow_dispatch' 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
 
       - name: Install dependencies
         run: npm install
 
       - name: Run Cypress Tests
-        run: npm run cypress:run
-        continue-on-error: true  # Ensure the workflow continues even if Cypress tests fail
-        id: cypress  # Assign an ID to capture the exit code for later steps
-      
-      - name: Update the status check based on test results
-        if: steps.cypress.outcome == 'success'
+        run: npx cypress run
+
+      - name: Update the status check with success
+        if: success()
         run: |
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{
               "state": "success",
-              "description": "UI Tests have successfully passed.",
+              "description": "UI Tests have passed.",
               "context": "Run Cypress UI Tests"
             }' \
             https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}
-      
+
       - name: Update the status check with failure
-        if: steps.cypress.outcome != 'success'
+        if: failure()
         run: |
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
