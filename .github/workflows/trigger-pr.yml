@@ -2,7 +2,9 @@
 name: Cypress UI Tests
 
 on:
-  workflow_dispatch:
+    pull_request:
+        types: [opened, synchronize, reopened]  # These events ensure it runs on PR creation or updates
+    workflow_dispatch:  # This allows manual triggering
 
 jobs:
   create-check:
